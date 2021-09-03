@@ -1,0 +1,31 @@
+GET http://localhost:8080/api/posts
+
+###
+
+GET http://localhost:8080/api/posts/2
+
+###
+
+POST http://localhost:8080/api/posts
+Content-Type: application/json
+
+{
+  "id": 0,
+  "content": "PPPOOOSSSTTTT"
+}
+
+###
+
+PUT http://localhost:8080/api/posts
+Content-Type: application/json
+
+{
+  "id": 5,
+  "content": "PUT"
+}
+
+###
+
+DELETE http://localhost:8080/api/posts/6
+
+
