@@ -1,12 +1,14 @@
 package ru.netology.model;
 
+import java.util.concurrent.atomic.AtomicLong;
+
 public class Post {
-    private static long count = 0;
-    private long id;
+
+    private Long id;
     private String content;
 
-    public Post(String content) {
-        this.id = ++count;
+    public Post(Long id, String content) {
+        this.id = id;
         this.content = content;
 
     }

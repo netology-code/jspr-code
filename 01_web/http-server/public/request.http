@@ -11,7 +11,7 @@ Content-Type: application/json
 
 {
   "id": 0,
-  "content": "PPPOOOSSSTTTT"
+  "content": "333"
 }
 
 ###
@@ -20,12 +20,12 @@ PUT http://localhost:8080/api/posts
 Content-Type: application/json
 
 {
-  "id": 5,
+  "id": 2,
   "content": "PUT"
 }
 
 ###
 
-DELETE http://localhost:8080/api/posts/6
+DELETE http://localhost:8080/api/posts/1
 
 
