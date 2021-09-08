@@ -1,5 +1,6 @@
 package ru.netology.servlet;
 
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import ru.netology.controller.PostController;
 import ru.netology.my_handler.MyHandler;
 import ru.netology.repository.PostRepository;
@@ -30,10 +31,20 @@ public class MainServlet extends HttpServlet {
 
     @Override
     public void init() {
-        final var repository = new PostRepository();
+        /*final var repository = new PostRepository();
         final var service = new PostService(repository);
-        controller = new PostController(service);
-        addHandlers(HANDLERS, controller);
+        controller = new PostController(service);*/
+        // отдаём список пакетов, в которых нужно искать аннотированные классы
+        final var context = new AnnotationConfigApplicationContext("ru.netology");
+
+        // получаем по имени бина
+        final var controller = context.getBean("postController");
+
+        // получаем по классу бина
+        final var service = context.getBean(PostService.class);
+
+        // controller приводим к типу, так как бин получен по имени (String) и возвращает Object
+        addHandlers(HANDLERS, (PostController) controller);
     }
 
     @Override

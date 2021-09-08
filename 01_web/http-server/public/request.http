@@ -11,7 +11,7 @@ Content-Type: application/json
 
 {
   "id": 0,
-  "content": "333"
+  "content": "THANKS MAXIM !!! Homework started, but I do not feel smarter)))"
 }
 
 ###
@@ -26,6 +26,6 @@ Content-Type: application/json
 
 ###
 
-DELETE http://localhost:8080/api/posts/1
+DELETE http://localhost:8080/api/posts/2
 
 
