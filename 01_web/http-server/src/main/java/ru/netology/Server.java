@@ -10,13 +10,17 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class Server {
-    private final List<String> VALID_PATHS = List.of("/index.html", "/spring.svg", "/spring.png", "/resources.html", "/styles.css", "/app.js", "/links.html", "/forms.html", "/classic.html", "/events.html", "/events.js");
-    public static final int PORT = 9999;
+    private static final List<String> VALID_PATHS = List.of("/index.html", "/spring.svg", "/spring.png", "/resources.html", "/styles.css", "/app.js", "/links.html", "/forms.html", "/classic.html", "/events.html", "/events.js");
+    private static final int PORT = 9999;
     private static final int THREADS_COUNT = 64;
+
+    private final Map<String, Handler> handlerMap = new ConcurrentHashMap<>();
 
     @SuppressWarnings("InfiniteLoopStatement")
     public void start() {
@@ -35,6 +39,10 @@ public class Server {
         }
     }
 
+    public void addHandler(String method, String path, Handler handler) {
+        handlerMap.put(method + " " + path, handler);
+    }
+
     private Runnable getServerTask(final Socket socket) {
         return () -> {
             try {
@@ -50,27 +58,62 @@ public class Server {
         try (final BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
              final BufferedOutputStream out = new BufferedOutputStream(socket.getOutputStream())) {
 
-            final String[] parts = getRequestParts(in);
-            if (parts.length != 3) {
+            final Request request = getRequest(in);
+            if (request == null) {
                 // just close socket
                 return;
             }
 
-            final String path = parts[1];
-            if (!VALID_PATHS.contains(path)) {
-                makeNotFoundResponse(out);
+            final Handler handler = handlerMap.get(request.getMethod() + " " + request.getPath());
+            if (handler == null) {
+                if (!VALID_PATHS.contains(request.getPath())) {
+                    makeNotFoundResponse(out);
+                } else {
+                    makeResponseWithContent(out, request.getPath());
+                }
             } else {
-                makeResponseWithContent(out, path);
+                handler.handle(request, out);
             }
             out.flush();
         }
     }
 
-    private String[] getRequestParts(BufferedReader in) throws IOException {
+    private Request getRequest(BufferedReader in) throws IOException {
         // read only request line for simplicity
         // must be in form GET /path HTTP/1.1
         final String requestLine = in.readLine();
-        return requestLine.split(" ");
+        final String[] parts = requestLine.split(" ");
+        if (parts.length != 3) {
+            // just close socket
+            return null;
+        }
+
+        final StringBuilder headers = new StringBuilder();
+        final StringBuilder body = new StringBuilder();
+        boolean hasBody = false;
+
+        String inputLine = in.readLine();
+        while (inputLine.length() > 0) {
+            headers.append(inputLine);
+            if (inputLine.startsWith("Content-Length: ")) {
+                int index = inputLine.indexOf(':') + 1;
+                String len = inputLine.substring(index).trim();
+                if (Integer.parseInt(len) > 0) {
+                    hasBody = true;
+                }
+            }
+            inputLine = in.readLine();
+        }
+
+        if (hasBody) {
+            inputLine = in.readLine();
+            while (inputLine != null && inputLine.length() > 0) {
+                body.append(inputLine);
+                inputLine = in.readLine();
+            }
+        }
+
+        return new Request(parts[0], parts[1], headers.toString(), body.toString());
     }
 
     private void makeNotFoundResponse(BufferedOutputStream out) throws IOException {
