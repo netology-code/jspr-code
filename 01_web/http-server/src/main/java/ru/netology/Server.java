@@ -113,7 +113,14 @@ public class Server {
             }
         }
 
-        return new Request(parts[0], parts[1], headers.toString(), body.toString());
+        return new Request(parts[0], getCleanPath(parts[1]), headers.toString(), body.toString());
+    }
+
+    private String getCleanPath(String path) {
+        if (path.contains("?")) {
+            return path.substring(0, path.indexOf("?"));
+        }
+        return path;
     }
 
     private void makeNotFoundResponse(BufferedOutputStream out) throws IOException {
