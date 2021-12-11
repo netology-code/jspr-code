@@ -1,11 +1,15 @@
 package ru.netology.server;
 
+import org.apache.http.NameValuePair;
+import org.apache.http.client.utils.URLEncodedUtils;
+
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
@@ -49,7 +53,12 @@ public class Server {
                 return;
             }
 
-            final var path = parts[1];
+            final var query = parts[1];
+            System.out.println("query: " + query);
+            final var path = getQueryPath(query);
+            System.out.println("path: " + path);
+            List<NameValuePair> nameValuePair = URLEncodedUtils.parse(URI.create(query),"utf8");
+            System.out.println("query params: " + nameValuePair);
             if (!VALID_PATHS.contains(path)) {
                 out.write((
                         "HTTP/1.1 404 Not Found\r\n" +
@@ -96,5 +105,10 @@ public class Server {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    private String getQueryPath(String query) {
+        int endInd = query.indexOf("?");
+        return (endInd > 0) ? query.substring(0, endInd) : query;
     }
 }
