@@ -47,7 +47,6 @@ public class MainServlet extends HttpServlet {
             if (method.equals(DELETE) && path.matches(PATH + SEPARATOR + "\\d+")) {
                 // easy way
                 final var id = findIdInPath(path, SEPARATOR);
-                System.out.println(id);
                 controller.removeById(id, resp);
                 return;
             }

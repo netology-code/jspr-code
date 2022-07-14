@@ -1,8 +1,10 @@
 package ru.netology.repository;
 
+import org.apache.http.client.utils.URLEncodedUtils;
 import ru.netology.exception.NotFoundException;
 import ru.netology.model.Post;
 
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -29,7 +31,6 @@ public class PostRepository {
 
             if (postInList.isPresent()) {
                 posts.set(posts.indexOf(postInList.get()), post);
-                return post;
             } else {
                 throw new NotFoundException("Невозможно сохранить пост!");
             }
@@ -37,6 +38,8 @@ public class PostRepository {
             post.setId(postsCounter++);
             posts.add(post);
         }
+        post.setContent(String.valueOf(URLEncodedUtils.parse(post.getContent(),
+                StandardCharsets.UTF_8).get(0)));
         return post;
     }
 

@@ -1,6 +1,6 @@
 package ru.netology.controller;
 
-import com.google.gson.Gson;
+import com.google.gson.*;
 import ru.netology.model.Post;
 import ru.netology.service.PostService;
 
