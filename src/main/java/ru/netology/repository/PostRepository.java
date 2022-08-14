@@ -1,7 +1,7 @@
 package ru.netology.repository;
 
 import org.apache.http.client.utils.URLEncodedUtils;
-import org.springframework.stereotype.Controller;
+import org.springframework.stereotype.Repository;
 import ru.netology.exception.NotFoundException;
 import ru.netology.model.Post;
 
@@ -12,14 +12,14 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 // Stub
 
-@Controller
+@Repository
 public class PostRepository {
 
     private final Map<Long, Post> posts = new ConcurrentHashMap<>();
     private final AtomicInteger postsCounter = new AtomicInteger(0);
 
     public List<Post> all() {
-        return (List<Post>) posts.values();
+        return new ArrayList<>(posts.values());
     }
 
     public Optional<Post> getById(long id) {
