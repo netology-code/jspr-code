@@ -40,19 +40,8 @@ public class Connection implements Callable<Boolean> {
                 request.setRequestBody(parts[2]);
             }
 
-            if (server.handlers.containsKey(request.requestMethod)) {
-                if (server.handlers.get(request.requestMethod).containsKey(request.requestHeader)) {
-                    server.handlers.get(request.requestMethod).get(request.requestHeader).handle(request, out);
-                } else {
-                    out.write((
-                            "HTTP/1.1 404 Not Found\r\n" +
-                                    "Content-Length: 0\r\n" +
-                                    "Connection: close\r\n" +
-                                    "\r\n"
-                    ).getBytes());
-                    out.flush();
-                    return false;
-                }
+            if (!server.handlers.isEmpty()&server.handlers.containsKey(request.requestMethod)&server.handlers.get(request.requestMethod).containsKey(request.requestHeader)) {
+                server.handlers.get(request.requestMethod).get(request.requestHeader).handle(request, out);
             } else {
                 out.write((
                         "HTTP/1.1 404 Not Found\r\n" +
