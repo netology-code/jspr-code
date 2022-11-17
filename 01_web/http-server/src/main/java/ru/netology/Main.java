@@ -13,12 +13,12 @@ public class Main {
 
     Server server = new Server(port, validPaths);
 
-    server.addHandler("GET", "/spring.svg", new Handler() {
+    server.addHandler("GET", "/messages", new Handler() {
       @Override
       public void handle(Request request, BufferedOutputStream out) {
         try {
           final var path = request.requestHeader;
-          final var filePath = Path.of(".", "public", path);
+          final var filePath = Path.of(".", "public/app.js");
           final var mimeType = Files.probeContentType(filePath);
           final var length = Files.size(filePath);
           out.write((
@@ -35,6 +35,7 @@ public class Main {
         }
       }
     });
+
     server.run();
 
   }
