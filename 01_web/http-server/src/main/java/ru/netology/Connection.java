@@ -29,6 +29,44 @@ public class Connection implements Callable<Boolean> {
             final var requestLine = in.readLine();
             final var parts = requestLine.split(" ");
 
+            Request request = new Request();
+            if (!parts[0].isEmpty()) {
+                request.setRequestMethod(parts[0]);
+            }
+            if (!parts[1].isEmpty()) {
+                request.setRequestHeader(parts[1]);
+            }
+            if (!parts[2].isEmpty()) {
+                request.setRequestBody(parts[2]);
+            }
+
+            if (server.handlers.containsKey(request.requestMethod)) {
+                if (server.handlers.get(request.requestMethod).containsKey(request.requestHeader)) {
+                    server.handlers.get(request.requestMethod).get(request.requestHeader).handle(request,out);
+                } else {
+                    out.write((
+                            "HTTP/1.1 404 Not Found\r\n" +
+                                    "Content-Length: 0\r\n" +
+                                    "Connection: close\r\n" +
+                                    "\r\n"
+                    ).getBytes());
+                    out.flush();
+                    return false;
+                }
+            } else {
+                out.write((
+                        "HTTP/1.1 404 Not Found\r\n" +
+                                "Content-Length: 0\r\n" +
+                                "Connection: close\r\n" +
+                                "\r\n"
+                ).getBytes());
+                out.flush();
+                return false;
+            }
+
+
+
+
             if (parts.length != 3) {
                 // just close socket
                 return false;
