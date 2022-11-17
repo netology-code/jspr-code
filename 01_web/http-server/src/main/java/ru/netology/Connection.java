@@ -30,67 +30,68 @@ public class Connection implements Callable<Boolean> {
             final var parts = requestLine.split(" ");
 
             request = new Request();
-            if (!parts[0].isEmpty()) {
-                request.setRequestMethod(parts[0]);
-            }
-            if (!parts[1].isEmpty()) {
-                request.setRequestHeader(parts[1]);
-            }
-            if (!parts[2].isEmpty()) {
-                request.setRequestBody(parts[2]);
-            }
 
-            if (!server.handlers.isEmpty()&server.handlers.containsKey(request.requestMethod)&server.handlers.get(request.requestMethod).containsKey(request.requestHeader)) {
+            if (parts.length == 3) {
+                request.setRequestBody(parts[2]).setRequestHeader(parts[1]).setRequestMethod(parts[0]);
+            } else if (parts.length == 2) {
+                request.setRequestHeader(parts[1]).setRequestMethod(parts[0]);
+            } else if (!server.handlers.isEmpty() & server.handlers.containsKey(request.requestMethod) & server.handlers.get(request.requestMethod).containsKey(request.requestHeader)) {
                 server.handlers.get(request.requestMethod).get(request.requestHeader).handle(request, out);
             } else {
-
-                final var path = request.requestHeader;
-                if (!server.validPaths.contains(path)) {
-                    out.write((
-                            "HTTP/1.1 404 Not Found\r\n" +
-                                    "Content-Length: 0\r\n" +
-                                    "Connection: close\r\n" +
-                                    "\r\n"
-                    ).getBytes());
-                    out.flush();
-                    return false;
-                }
-
-                final var filePath = Path.of(".", "public", path);
-                final var mimeType = Files.probeContentType(filePath);
-
-                // special case for classic
-                if (path.equals("/classic.html")) {
-                    final var template = Files.readString(filePath);
-                    final var content = template.replace(
-                            "{time}",
-                            LocalDateTime.now().toString()
-                    ).getBytes();
-                    out.write((
-                            "HTTP/1.1 200 OK\r\n" +
-                                    "Content-Type: " + mimeType + "\r\n" +
-                                    "Content-Length: " + content.length + "\r\n" +
-                                    "Connection: close\r\n" +
-                                    "\r\n"
-                    ).getBytes());
-                    out.write(content);
-                    out.flush();
-                    return false;
-                }
-
-                final var length = Files.size(filePath);
                 out.write((
-                        "HTTP/1.1 200 OK\r\n" +
-                                "Content-Type: " + mimeType + "\r\n" +
-                                "Content-Length: " + length + "\r\n" +
+                        "HTTP/1.1 404 Not Found\r\n" +
+                                "Content-Length: 0\r\n" +
                                 "Connection: close\r\n" +
                                 "\r\n"
                 ).getBytes());
-                Files.copy(filePath, out);
                 out.flush();
                 return false;
             }
 
+            final var path = request.requestHeader;
+            if (!server.validPaths.contains(path)) {
+                out.write((
+                        "HTTP/1.1 404 Not Found\r\n" +
+                                "Content-Length: 0\r\n" +
+                                "Connection: close\r\n" +
+                                "\r\n"
+                ).getBytes());
+                out.flush();
+                return false;
+            }
+
+            final var filePath = Path.of(".", "public", path);
+            final var mimeType = Files.probeContentType(filePath);
+
+            // special case for classic
+            if (path.equals("/classic.html")) {
+                final var template = Files.readString(filePath);
+                final var content = template.replace(
+                        "{time}",
+                        LocalDateTime.now().toString()
+                ).getBytes();
+                out.write((
+                        "HTTP/1.1 200 OK\r\n" +
+                                "Content-Type: " + mimeType + "\r\n" +
+                                "Content-Length: " + content.length + "\r\n" +
+                                "Connection: close\r\n" +
+                                "\r\n"
+                ).getBytes());
+                out.write(content);
+                out.flush();
+                return false;
+            }
+
+            final var length = Files.size(filePath);
+            out.write((
+                    "HTTP/1.1 200 OK\r\n" +
+                            "Content-Type: " + mimeType + "\r\n" +
+                            "Content-Length: " + length + "\r\n" +
+                            "Connection: close\r\n" +
+                            "\r\n"
+            ).getBytes());
+            Files.copy(filePath, out);
+            out.flush();
             return false;
         }
     }
