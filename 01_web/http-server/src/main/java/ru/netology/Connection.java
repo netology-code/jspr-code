@@ -11,6 +11,7 @@ import java.util.concurrent.Callable;
 public class Connection implements Callable<Boolean> {
 
     Server server;
+    Request request;
 
     protected Connection(Server server) {
         this.server = server;
@@ -24,12 +25,11 @@ public class Connection implements Callable<Boolean> {
                 final var in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
                 final var out = new BufferedOutputStream(socket.getOutputStream())
         ) {
-            // read only request line for simplicity
-            // must be in form GET /path HTTP/1.1
+
             final var requestLine = in.readLine();
             final var parts = requestLine.split(" ");
 
-            Request request = new Request();
+            request = new Request();
             if (!parts[0].isEmpty()) {
                 request.setRequestMethod(parts[0]);
             }
@@ -42,7 +42,7 @@ public class Connection implements Callable<Boolean> {
 
             if (server.handlers.containsKey(request.requestMethod)) {
                 if (server.handlers.get(request.requestMethod).containsKey(request.requestHeader)) {
-                    server.handlers.get(request.requestMethod).get(request.requestHeader).handle(request,out);
+                    server.handlers.get(request.requestMethod).get(request.requestHeader).handle(request, out);
                 } else {
                     out.write((
                             "HTTP/1.1 404 Not Found\r\n" +
@@ -64,61 +64,7 @@ public class Connection implements Callable<Boolean> {
                 return false;
             }
 
-
-
-
-            if (parts.length != 3) {
-                // just close socket
-                return false;
-            }
-
-            final var path = parts[1];
-            if (!server.validPaths.contains(path)) {
-                out.write((
-                        "HTTP/1.1 404 Not Found\r\n" +
-                                "Content-Length: 0\r\n" +
-                                "Connection: close\r\n" +
-                                "\r\n"
-                ).getBytes());
-                out.flush();
-                return false;
-            }
-
-            final var filePath = Path.of(".", "public", path);
-            final var mimeType = Files.probeContentType(filePath);
-
-            // special case for classic
-            if (path.equals("/classic.html")) {
-                final var template = Files.readString(filePath);
-                final var content = template.replace(
-                        "{time}",
-                        LocalDateTime.now().toString()
-                ).getBytes();
-                out.write((
-                        "HTTP/1.1 200 OK\r\n" +
-                                "Content-Type: " + mimeType + "\r\n" +
-                                "Content-Length: " + content.length + "\r\n" +
-                                "Connection: close\r\n" +
-                                "\r\n"
-                ).getBytes());
-                out.write(content);
-                out.flush();
-                return false;
-            }
-
-            final var length = Files.size(filePath);
-            out.write((
-                    "HTTP/1.1 200 OK\r\n" +
-                            "Content-Type: " + mimeType + "\r\n" +
-                            "Content-Length: " + length + "\r\n" +
-                            "Connection: close\r\n" +
-                            "\r\n"
-            ).getBytes());
-            Files.copy(filePath, out);
-            out.flush();
+            return false;
         }
-
-
-        return false;
     }
 }
