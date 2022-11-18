@@ -3,36 +3,39 @@ package ru.netology;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.util.List;
-import java.util.concurrent.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
-public class Server implements Runnable {
+public class Server {
 
-    protected ServerSocket serverSocket;
-    protected List<String> validPaths;
-    ExecutorService service;
-    Thread t= new Thread(this);
+    private final int port;
+    private ServerSocket serverSocket;
+    private final List<String> validPaths;
 
     public Server(int port, List<String> validPaths) {
-        try {
-            serverSocket = new ServerSocket(port);
+        this.port = port;
+        this.validPaths = validPaths;
+    }
+
+    public void listen() {
+        try (ServerSocket serverSocket = new ServerSocket(port)) {
+            ExecutorService service = Executors.newFixedThreadPool(64);
+            this.serverSocket = serverSocket;
+            while (true) {
+                Connection newConnection = new Connection(this);
+                service.submit(newConnection);
+            }
         } catch (IOException e) {
             e.printStackTrace();
         }
-        this.validPaths = validPaths;
-        service = Executors.newFixedThreadPool(64);
-        t.start();
     }
 
-    @Override
-    public void run() {
-        while (true) {
-            try {
-                Connection newConnection = new Connection(this);
-                service.submit(newConnection);
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
+    public ServerSocket getServerSocket() {
+        return serverSocket;
+    }
+
+    public List<String> getValidPaths() {
+        return validPaths;
     }
 
 }

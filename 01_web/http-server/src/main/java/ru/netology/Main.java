@@ -8,7 +8,7 @@ public class Main {
     int port = 9999;
 
     Server server = new Server(port, validPaths);
-    server.run();
+    server.listen();
 
   }
 }

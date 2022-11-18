@@ -10,17 +10,16 @@ import java.util.concurrent.Callable;
 
 public class Connection implements Callable<Boolean> {
 
-    Server server;
+    private final Server server;
 
     protected Connection(Server server) {
         this.server = server;
     }
 
-
     @Override
     public Boolean call() throws Exception {
         try (
-                final var socket = server.serverSocket.accept();
+                final var socket = server.getServerSocket().accept();
                 final var in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
                 final var out = new BufferedOutputStream(socket.getOutputStream())
         ) {
@@ -35,7 +34,7 @@ public class Connection implements Callable<Boolean> {
             }
 
             final var path = parts[1];
-            if (!server.validPaths.contains(path)) {
+            if (!server.getValidPaths().contains(path)) {
                 out.write((
                         "HTTP/1.1 404 Not Found\r\n" +
                                 "Content-Length: 0\r\n" +
