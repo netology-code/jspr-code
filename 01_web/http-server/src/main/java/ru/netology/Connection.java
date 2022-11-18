@@ -47,12 +47,19 @@ public class Connection implements Callable<Boolean> {
                 return false;
             }
 
-            if (!server.getHandlers.isEmpty()) {
-                Iterator iterator = server.getHandlers.entrySet().iterator();
+            if (!server.handlers.isEmpty()) {
+                Iterator iterator = server.handlers.entrySet().iterator();
                 while (iterator.hasNext()) {
-                    Map.Entry<String, Handler> pair = (Map.Entry) iterator.next();
-                    if (request.requestHeader.equals(pair.getKey())) {
-                        pair.getValue().handle(request,out);
+                    Map.Entry<String, Map<String,Handler>> pair = (Map.Entry) iterator.next();
+                    if (request.requestMethod.equals(pair.getKey())) {
+                        Iterator iterator1 = pair.getValue().entrySet().iterator();
+                        while (iterator1.hasNext()) {
+                            Map.Entry<String,Handler> map1 = (Map.Entry) iterator1.next();
+                            if (map1.getKey().equals(request.requestHeader)) {
+                                map1.getValue().handle(request,out);
+                                return false;
+                            }
+                        }
                     }
                 }
             }

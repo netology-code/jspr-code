@@ -3,6 +3,7 @@ package ru.netology;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.*;
@@ -13,7 +14,7 @@ public class Server implements Runnable {
     protected ServerSocket serverSocket;
     protected List<String> validPaths;
     ExecutorService service;
-    Map<String, Handler> getHandlers = new ConcurrentHashMap<>();
+    Map<String, Map<String,Handler>> handlers = new ConcurrentHashMap<>();
     Thread t = new Thread(this);
 
     public Server(int port, List<String> validPaths) {
@@ -40,7 +41,23 @@ public class Server implements Runnable {
     }
 
     public void addHandler(String method, String path, Handler handler) {
-        getHandlers.put(path,handler);
+        boolean adding = false;
+        if (!handlers.isEmpty()) {
+            Iterator iterator = handlers.entrySet().iterator();
+            while (iterator.hasNext()) {
+                Map.Entry<String,Map<String,Handler>> map = (Map.Entry)iterator.next();
+                if (map.getKey().equals(method)) {
+                    map.getValue().put(path,handler);
+                    adding = true;
+                    break;
+                }
+            }
+        }
+        if (!adding) {
+            Map<String,Handler> map1 = new HashMap<>();
+            map1.put(path,handler);
+            handlers.put(method,map1);
+        }
     }
 
 }
