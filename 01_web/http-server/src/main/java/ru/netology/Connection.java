@@ -6,7 +6,10 @@ import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
+import java.util.Iterator;
+import java.util.Map;
 import java.util.concurrent.Callable;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class Connection implements Callable<Boolean> {
 
@@ -33,10 +36,6 @@ public class Connection implements Callable<Boolean> {
 
             if (parts.length == 3) {
                 request.setRequestBody(parts[2]).setRequestHeader(parts[1]).setRequestMethod(parts[0]);
-            } else if (parts.length == 2) {
-                request.setRequestHeader(parts[1]).setRequestMethod(parts[0]);
-            } else if (!server.handlers.isEmpty() & server.handlers.containsKey(request.requestMethod) & server.handlers.get(request.requestMethod).containsKey(request.requestHeader)) {
-                server.handlers.get(request.requestMethod).get(request.requestHeader).handle(request, out);
             } else {
                 out.write((
                         "HTTP/1.1 404 Not Found\r\n" +
@@ -46,6 +45,16 @@ public class Connection implements Callable<Boolean> {
                 ).getBytes());
                 out.flush();
                 return false;
+            }
+
+            if (!server.getHandlers.isEmpty()) {
+                Iterator iterator = server.getHandlers.entrySet().iterator();
+                while (iterator.hasNext()) {
+                    Map.Entry<String, Handler> pair = (Map.Entry) iterator.next();
+                    if (request.requestHeader.equals(pair.getKey())) {
+                        pair.getValue().handle(request,out);
+                    }
+                }
             }
 
             final var path = request.requestHeader;

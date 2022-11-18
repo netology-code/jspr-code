@@ -6,13 +6,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class Server implements Runnable {
 
     protected ServerSocket serverSocket;
     protected List<String> validPaths;
     ExecutorService service;
-    Map<String, Map<String,Handler>> handlers = new ConcurrentHashMap<>();
+    Map<String, Handler> getHandlers = new ConcurrentHashMap<>();
     Thread t = new Thread(this);
 
     public Server(int port, List<String> validPaths) {
@@ -39,15 +40,7 @@ public class Server implements Runnable {
     }
 
     public void addHandler(String method, String path, Handler handler) {
-        if (handlers.containsKey(method)) {
-            if (handlers.get(method).containsKey(path)) {
-                handlers.get(method).put(path, handler);
-            } else {
-                Map<String,Handler> map = new HashMap<>();
-                map.put(path,handler);
-                handlers.put(method,map);
-            }
-        }
+        getHandlers.put(path,handler);
     }
 
 }
