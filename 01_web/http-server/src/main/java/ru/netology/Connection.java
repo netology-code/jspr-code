@@ -12,7 +12,7 @@ import java.util.concurrent.Callable;
 
 public class Connection implements Callable<Boolean> {
 
-    private Server server;
+    private final Server server;
     private Request request;
 
     protected Connection(Server server) {
