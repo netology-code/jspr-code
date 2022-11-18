@@ -8,9 +8,17 @@ public class Request {
     protected Request() {
     }
 
+    public String getRequestMethod() {
+        return requestMethod;
+    }
+
     protected Request setRequestMethod(String requestMethod) {
         this.requestMethod = requestMethod;
         return this;
+    }
+
+    public String getRequestHeader() {
+        return requestHeader;
     }
 
     protected Request setRequestHeader(String requestHeader) {
@@ -18,20 +26,12 @@ public class Request {
         return this;
     }
 
+    public String getRequestBody() {
+        return requestBody;
+    }
+
     protected Request setRequestBody(String requestBody) {
         this.requestBody = requestBody;
         return this;
-    }
-
-    public String getRequestMethod() {
-        return requestMethod;
-    }
-
-    public String getRequestHeader() {
-        return requestHeader;
-    }
-
-    public String getRequestBody() {
-        return requestBody;
     }
 }

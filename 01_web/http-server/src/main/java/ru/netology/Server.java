@@ -2,30 +2,27 @@ package ru.netology;
 
 import java.io.IOException;
 import java.net.ServerSocket;
-import java.net.Socket;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 public class Server {
 
     private ServerSocket serverSocket;
-    private List<String> validPaths;
-    private int port;
-    private ExecutorService service;
-    private Map<String, Map<String,Handler>> handlers = new ConcurrentHashMap<>();
+    private final List<String> validPaths;
+    private final int port;
+    private final Map<String, Map<String,Handler>> handlers = new ConcurrentHashMap<>();
 
     public Server(int port, List<String> validPaths) {
         this.port = port;
         this.validPaths = validPaths;
-        service = Executors.newFixedThreadPool(64);
     }
 
     public void listen() {
-        serverSocket =null;
+        serverSocket = null;
+        ExecutorService service = Executors.newFixedThreadPool(64);
         try(ServerSocket serverSocket = new ServerSocket(port)){
             this.serverSocket = serverSocket;
             while (true) {
