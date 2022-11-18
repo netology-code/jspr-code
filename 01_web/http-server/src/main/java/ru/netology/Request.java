@@ -1,9 +1,9 @@
 package ru.netology;
 
 public class Request {
-    String requestMethod;
-    String requestHeader;
-    String requestBody;
+    private String requestMethod;
+    private String requestHeader;
+    private String requestBody;
 
     protected Request() {
     }
@@ -21,5 +21,17 @@ public class Request {
     protected Request setRequestBody(String requestBody) {
         this.requestBody = requestBody;
         return this;
+    }
+
+    public String getRequestMethod() {
+        return requestMethod;
+    }
+
+    public String getRequestHeader() {
+        return requestHeader;
+    }
+
+    public String getRequestBody() {
+        return requestBody;
     }
 }

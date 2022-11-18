@@ -2,6 +2,7 @@ package ru.netology;
 
 import java.io.IOException;
 import java.net.ServerSocket;
+import java.net.Socket;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -9,34 +10,34 @@ import java.util.Map;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-public class Server implements Runnable {
+public class Server {
 
-    protected ServerSocket serverSocket;
-    protected List<String> validPaths;
-    ExecutorService service;
-    Map<String, Map<String,Handler>> handlers = new ConcurrentHashMap<>();
-    Thread t = new Thread(this);
+    private ServerSocket serverSocket;
+    private List<String> validPaths;
+    private int port;
+    private ExecutorService service;
+    private Map<String, Map<String,Handler>> handlers = new ConcurrentHashMap<>();
 
     public Server(int port, List<String> validPaths) {
-        try {
-            serverSocket = new ServerSocket(port);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        this.port = port;
         this.validPaths = validPaths;
         service = Executors.newFixedThreadPool(64);
-        t.start();
     }
 
-    @Override
-    public void run() {
-        while (true) {
-            try {
-                Connection newConnection = new Connection(this);
-                service.submit(newConnection);
-            } catch (Exception e) {
-                e.printStackTrace();
+    public void listen() {
+        serverSocket =null;
+        try(ServerSocket serverSocket = new ServerSocket(port)){
+            this.serverSocket = serverSocket;
+            while (true) {
+                try {
+                    Connection newConnection = new Connection(this);
+                    service.submit(newConnection);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             }
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
@@ -58,6 +59,22 @@ public class Server implements Runnable {
             map1.put(path,handler);
             handlers.put(method,map1);
         }
+    }
+
+    public ServerSocket getServerSocket() {
+        return serverSocket;
+    }
+
+    public List<String> getValidPaths() {
+        return validPaths;
+    }
+
+    public int getPort() {
+        return port;
+    }
+
+    public Map<String, Map<String, Handler>> getHandlers() {
+        return handlers;
     }
 
 }

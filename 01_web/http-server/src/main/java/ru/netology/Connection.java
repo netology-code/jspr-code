@@ -12,8 +12,8 @@ import java.util.concurrent.Callable;
 
 public class Connection implements Callable<Boolean> {
 
-    Server server;
-    Request request;
+    private Server server;
+    private Request request;
 
     protected Connection(Server server) {
         this.server = server;
@@ -23,7 +23,7 @@ public class Connection implements Callable<Boolean> {
     @Override
     public Boolean call() throws Exception {
         try (
-                final var socket = server.serverSocket.accept();
+                final var socket = server.getServerSocket().accept();
                 final var in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
                 final var out = new BufferedOutputStream(socket.getOutputStream())
         ) {
@@ -46,15 +46,15 @@ public class Connection implements Callable<Boolean> {
                 return false;
             }
 
-            if (!server.handlers.isEmpty()) {
-                Iterator iterator = server.handlers.entrySet().iterator();
+            if (!server.getHandlers().isEmpty()) {
+                Iterator iterator = server.getHandlers().entrySet().iterator();
                 while (iterator.hasNext()) {
                     Map.Entry<String, Map<String, Handler>> pair = (Map.Entry) iterator.next();
-                    if (request.requestMethod.equals(pair.getKey())) {
+                    if (request.getRequestMethod().equals(pair.getKey())) {
                         Iterator iterator1 = pair.getValue().entrySet().iterator();
                         while (iterator1.hasNext()) {
                             Map.Entry<String, Handler> map1 = (Map.Entry) iterator1.next();
-                            if (map1.getKey().equals(request.requestHeader)) {
+                            if (map1.getKey().equals(request.getRequestHeader())) {
                                 map1.getValue().handle(request, out);
                                 return false;
                             }
@@ -63,8 +63,8 @@ public class Connection implements Callable<Boolean> {
                 }
             }
 
-            final var path = request.requestHeader;
-            if (!server.validPaths.contains(path)) {
+            final var path = request.getRequestHeader();
+            if (!server.getValidPaths().contains(path)) {
                 out.write((
                         "HTTP/1.1 404 Not Found\r\n" +
                                 "Content-Length: 0\r\n" +
