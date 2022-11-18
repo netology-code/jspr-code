@@ -9,7 +9,6 @@ import java.time.LocalDateTime;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.Callable;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 public class Connection implements Callable<Boolean> {
 
@@ -50,13 +49,13 @@ public class Connection implements Callable<Boolean> {
             if (!server.handlers.isEmpty()) {
                 Iterator iterator = server.handlers.entrySet().iterator();
                 while (iterator.hasNext()) {
-                    Map.Entry<String, Map<String,Handler>> pair = (Map.Entry) iterator.next();
+                    Map.Entry<String, Map<String, Handler>> pair = (Map.Entry) iterator.next();
                     if (request.requestMethod.equals(pair.getKey())) {
                         Iterator iterator1 = pair.getValue().entrySet().iterator();
                         while (iterator1.hasNext()) {
-                            Map.Entry<String,Handler> map1 = (Map.Entry) iterator1.next();
+                            Map.Entry<String, Handler> map1 = (Map.Entry) iterator1.next();
                             if (map1.getKey().equals(request.requestHeader)) {
-                                map1.getValue().handle(request,out);
+                                map1.getValue().handle(request, out);
                                 return false;
                             }
                         }
