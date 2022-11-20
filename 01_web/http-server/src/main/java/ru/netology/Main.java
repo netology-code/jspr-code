@@ -1,6 +1,5 @@
 package ru.netology;
 
-import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.util.List;
 
@@ -12,20 +11,17 @@ public class Main {
 
     Server server = new Server(port, validPaths);
 
-    server.addHandler("GET", "/test", new Handler() {
-      @Override
-      public void handle(Request request, BufferedOutputStream out) {
-        try {
-          out.write((
-                  "HTTP/1.1 418 I’m a teapot\r\n" +
-                          "Content-Length: 0" + "\r\n" +
-                          "Connection: close\r\n" +
-                          "\r\n"
-          ).getBytes());
-          out.flush();
-        } catch (IOException e) {
-          e.printStackTrace();
-        }
+    server.addHandler("GET", "/messages", (request, out) -> {
+      try {
+        out.write((
+                "HTTP/1.1 418 I’m a teapot\r\n" +
+                        "Content-Length: 0" + "\r\n" +
+                        "Connection: close\r\n" +
+                        "\r\n"
+        ).getBytes());
+        out.flush();
+      } catch (IOException e) {
+        e.printStackTrace();
       }
     });
 

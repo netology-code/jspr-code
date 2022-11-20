@@ -27,8 +27,8 @@ public class Connection implements Callable<Boolean> {
                 final var in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
                 final var out = new BufferedOutputStream(socket.getOutputStream())
         ) {
-
             final var requestLine = in.readLine();
+            System.out.println(requestLine);
             final var parts = requestLine.split(" ");
 
             request = new Request();
@@ -45,6 +45,14 @@ public class Connection implements Callable<Boolean> {
                 out.flush();
                 return false;
             }
+
+            request.getQueryParams().stream()
+                    .forEach(x -> {
+                        System.out.println(x.getValue() + " " + x.getName());
+                    });
+
+            request.getPathSegments().stream()
+                    .forEach(System.out::println);
 
             if (!server.getHandlers().isEmpty()) {
                 Iterator iterator = server.getHandlers().entrySet().iterator();
