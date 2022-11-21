@@ -34,7 +34,7 @@ public class Connection implements Callable<Boolean> {
             request = new Request();
 
             if (parts.length == 3) {
-                request.setRequestBody(parts[2]).setRequestHeader(parts[1]).setRequestMethod(parts[0]);
+                request.setRequestHeader(parts[1]).setRequestMethod(parts[0]);
             } else {
                 out.write((
                         "HTTP/1.1 404 Not Found\r\n" +
@@ -46,14 +46,6 @@ public class Connection implements Callable<Boolean> {
                 return false;
             }
 
-            request.getQueryParams().stream()
-                    .forEach(x -> {
-                        System.out.println(x.getValue() + " " + x.getName());
-                    });
-
-            request.getPathSegments().stream()
-                    .forEach(System.out::println);
-
             if (!server.getHandlers().isEmpty()) {
                 Iterator iterator = server.getHandlers().entrySet().iterator();
                 while (iterator.hasNext()) {
@@ -62,7 +54,7 @@ public class Connection implements Callable<Boolean> {
                         Iterator iterator1 = pair.getValue().entrySet().iterator();
                         while (iterator1.hasNext()) {
                             Map.Entry<String, Handler> map1 = (Map.Entry) iterator1.next();
-                            if (map1.getKey().equals(request.getRequestHeader())) {
+                            if (map1.getKey().equals(request.getPath())) {
                                 map1.getValue().handle(request, out);
                                 return false;
                             }

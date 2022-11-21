@@ -12,7 +12,7 @@ public class Request {
     private String requestMethod;
     private String requestHeader;
     private String requestBody;
-    private List<String> requestPath;
+    private String requestPath;
     private List<NameValuePair> requestParams;
 
     protected Request() {
@@ -33,6 +33,7 @@ public class Request {
 
     protected Request setRequestHeader(String requestHeader) {
         this.requestHeader = requestHeader;
+        setPath();
         return this;
     }
 
@@ -55,10 +56,17 @@ public class Request {
         return null;
     }
 
-    protected List<String> getPathSegments() {
-        requestPath = URLEncodedUtils.parsePathSegments(requestHeader, StandardCharsets.UTF_8);
-        return requestPath;
+    private String setPath() {
+        if (!requestHeader.isEmpty()&requestHeader.contains("?")) {
+            requestPath = requestHeader.substring(0, requestHeader.indexOf("?"));
+            return requestPath;
+        } else {
+            return null;
+        }
     }
 
+    protected String getPath() {
+        return requestPath;
+    }
 
 }

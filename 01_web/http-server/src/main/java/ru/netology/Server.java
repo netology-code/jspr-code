@@ -10,7 +10,7 @@ import java.util.concurrent.*;
 
 public class Server {
 
-    private ServerSocket serverSocket;
+    private ServerSocket serverSocket = null;
     private final List<String> validPaths;
     private final int port;
     private final Map<String, Map<String,Handler>> handlers = new ConcurrentHashMap<>();
@@ -21,7 +21,6 @@ public class Server {
     }
 
     public void listen() {
-        serverSocket = null;
         ExecutorService service = Executors.newFixedThreadPool(64);
         try(ServerSocket serverSocket = new ServerSocket(port)){
             this.serverSocket = serverSocket;
