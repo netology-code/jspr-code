@@ -2,6 +2,7 @@ package ru.netology;
 
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -27,24 +28,33 @@ public class Connection implements Callable<Boolean> {
                 final var in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
                 final var out = new BufferedOutputStream(socket.getOutputStream())
         ) {
-            final var requestLine = in.readLine();
-            System.out.println(requestLine);
-            final var parts = requestLine.split(" ");
+
+            final var limit = 4096;
+            final var buffer = new char[limit];
+            final var requestBytes = in.readLine();
+            System.out.println(requestBytes);
+
+            for (int i = 0; i < limit; i++) {
+                if (in.ready()) {
+                    in.read(buffer);
+                } else {
+                    break;
+                }
+            }
+
+            final var parts = requestBytes.split(" ");
 
             request = new Request();
+            request.setBuffer(buffer);
 
             if (parts.length == 3) {
-                request.setRequestHeader(parts[1]).setRequestMethod(parts[0]);
+                request.setRequestLine(parts[1]).setRequestMethod(parts[0]);
             } else {
-                out.write((
-                        "HTTP/1.1 404 Not Found\r\n" +
-                                "Content-Length: 0\r\n" +
-                                "Connection: close\r\n" +
-                                "\r\n"
-                ).getBytes());
-                out.flush();
+                badRequest(out);
                 return false;
             }
+
+            request.getHeaders().stream().forEach(System.out::println);
 
             if (!server.getHandlers().isEmpty()) {
                 Iterator iterator = server.getHandlers().entrySet().iterator();
@@ -63,15 +73,9 @@ public class Connection implements Callable<Boolean> {
                 }
             }
 
-            final var path = request.getRequestHeader();
+            final var path = request.getRequestLine();
             if (!server.getValidPaths().contains(path)) {
-                out.write((
-                        "HTTP/1.1 404 Not Found\r\n" +
-                                "Content-Length: 0\r\n" +
-                                "Connection: close\r\n" +
-                                "\r\n"
-                ).getBytes());
-                out.flush();
+                badRequest(out);
                 return false;
             }
 
@@ -109,5 +113,15 @@ public class Connection implements Callable<Boolean> {
             out.flush();
             return false;
         }
+    }
+
+    private static void badRequest(BufferedOutputStream out) throws IOException {
+        out.write((
+                "HTTP/1.1 400 Bad Request\r\n" +
+                        "Content-Length: 0\r\n" +
+                        "Connection: close\r\n" +
+                        "\r\n"
+        ).getBytes());
+        out.flush();
     }
 }
