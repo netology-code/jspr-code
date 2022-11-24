@@ -48,6 +48,8 @@ public class Connection implements Callable<Boolean> {
                 if (request.getIsQuery()) {
                     request.getQueryParams().stream().forEach(System.out::println);
                 }
+                request.getHeaders().stream().forEach(System.out::println);
+                request.getHeader("Accept").stream().forEach(System.out::println);
 
                 if (!server.getHandlers().isEmpty()) {
                     var iterator = server.getHandlers().entrySet().iterator();
@@ -169,6 +171,11 @@ public class Connection implements Callable<Boolean> {
                     requestHeaders.add(new BasicNameValuePair(strgs[0],strgs[1]));
                 });
         return requestHeaders;
+    }
+
+    protected List<NameValuePair> setBody(char[] buffer, int limit) {
+        char[] targetS = new char[]{'\r', '\n', '\r', '\n'};
+        return null;
     }
 
 }

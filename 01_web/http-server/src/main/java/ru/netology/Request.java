@@ -17,6 +17,7 @@ public class Request {
     private boolean isQuery;
     private List<NameValuePair> queryParams;
     private List<NameValuePair> requestHeaders;
+    private boolean isBody;
     private String requestBody;
     private List<NameValuePair> postParams;
 
@@ -52,31 +53,36 @@ public class Request {
         if (!queryParams.isEmpty()) {
             List<NameValuePair> result = new ArrayList<>();
             queryParams.stream()
-                    .filter(x->x.getName().equals(paramName))
-                    .forEach(x->result.add(x));
+                    .filter(x -> x.getName().equals(paramName))
+                    .forEach(x -> result.add(x));
             return result;
+        } else {
+            return null;
         }
-        return null;
     }
 
     protected List<NameValuePair> getHeader(String headerName) {
         if (!requestHeaders.isEmpty()) {
             List<NameValuePair> header = new ArrayList<>();
             requestHeaders.stream()
-                    .filter(x->x.getName().trim().equals(headerName))
-                    .forEach(x->header.add(x));
+                    .filter(x -> x.getName().trim().equals(headerName.trim()))
+                    .forEach(x -> header.add(x));
+            return header;
+        } else {
+            return null;
         }
-        return null;
     }
 
     protected List<NameValuePair> getPostParam(String postParamName) {
         if (!postParams.isEmpty()) {
             List<NameValuePair> postParam = new ArrayList<>();
             postParams.stream()
-                    .filter(x->x.getName().trim().equals(postParamName))
-                    .forEach(x->postParam.add(x));
+                    .filter(x -> x.getName().trim().equals(postParamName))
+                    .forEach(x -> postParam.add(x));
+            return postParam;
+        } else {
+            return null;
         }
-        return null;
     }
 
 }
