@@ -2,6 +2,7 @@ package ru.netology;
 
 import org.apache.hc.core5.http.NameValuePair;
 import org.apache.hc.core5.net.URLEncodedUtils;
+import org.apache.hc.core5.net.WWWFormCodec;
 
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -10,14 +11,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Request {
-    private boolean isCorrect;
+    private boolean isCorrect = false;
     private String requestMethod;
     private String requestPath;
     private String queryLine;
-    private boolean isQuery;
+    private boolean isQuery = false;
     private List<NameValuePair> queryParams;
     private List<NameValuePair> requestHeaders;
-    private boolean isBody;
+    private boolean isBody = false;
     private String requestBody;
     private List<NameValuePair> postParams;
 
@@ -28,6 +29,7 @@ public class Request {
     }
     public String getPath() { return requestPath; }
     public boolean getIsCorrect() { return isCorrect; }
+    public String getRequestBody() { return requestBody; }
 
     public void setIsCorrect(boolean bool) {this.isCorrect = bool;}
     public void setRequestMethod(String method){this.requestMethod = method;}
@@ -36,8 +38,12 @@ public class Request {
     public void setIsQuery(boolean isQuery){this.isQuery = isQuery;}
     public void setRequestHeaders(List<NameValuePair> requestHeaders){this.requestHeaders = requestHeaders;}
 
+    public void setRequestBody(String requestBody){
+        this.requestBody = requestBody;
+        isBody = true;
+    }
+
     protected List<NameValuePair> getHeaders() { return requestHeaders; }
-    protected List<NameValuePair> getPostParams() { return postParams;}
     protected boolean getIsQuery() { return isQuery; }
 
     protected List<NameValuePair> getQueryParams() {
@@ -80,6 +86,15 @@ public class Request {
                     .filter(x -> x.getName().trim().equals(postParamName))
                     .forEach(x -> postParam.add(x));
             return postParam;
+        } else {
+            return null;
+        }
+    }
+
+    protected List<NameValuePair> getPostParams() {
+        if (!requestMethod.equals("GET")&!requestBody.isEmpty()) {
+            postParams = WWWFormCodec.parse(requestBody, StandardCharsets.UTF_8);
+            return postParams;
         } else {
             return null;
         }

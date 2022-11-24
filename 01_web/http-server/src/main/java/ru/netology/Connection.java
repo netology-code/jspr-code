@@ -45,11 +45,17 @@ public class Connection implements Callable<Boolean> {
                 badRequest(out);
             } else {
 
+                System.out.println("METHOD: " + request.getRequestMethod());
                 if (request.getIsQuery()) {
+                    System.out.println("QUERY PARAMS:");
                     request.getQueryParams().stream().forEach(System.out::println);
                 }
+                System.out.println("HEADERS:");
                 request.getHeaders().stream().forEach(System.out::println);
-                request.getHeader("Accept").stream().forEach(System.out::println);
+                if (setBody(buffer, request, limit)) {
+                    System.out.println("POST PARAMS:");
+                    request.getPostParams().stream().forEach(System.out::println);
+                }
 
                 if (!server.getHandlers().isEmpty()) {
                     var iterator = server.getHandlers().entrySet().iterator();
@@ -173,9 +179,17 @@ public class Connection implements Callable<Boolean> {
         return requestHeaders;
     }
 
-    protected List<NameValuePair> setBody(char[] buffer, int limit) {
-        char[] targetS = new char[]{'\r', '\n', '\r', '\n'};
-        return null;
+    protected boolean setBody(char[] buffer, Request request, int limit) {
+        List<NameValuePair> contentLength = request.getHeader("Content-Length");
+        if (!contentLength.isEmpty()) {
+            char[] target = new char[]{'\r', '\n', '\r', '\n'};
+            int start = indexOf(buffer,target,0,limit)+4;
+            int finish = start + Integer.parseInt(contentLength.get(0).getValue().trim(),10);
+            request.setRequestBody(String.valueOf(buffer).substring(start,finish));
+            return true;
+        } else {
+            return false;
+        }
     }
 
 }
