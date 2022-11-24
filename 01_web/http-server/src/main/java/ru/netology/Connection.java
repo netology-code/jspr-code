@@ -43,67 +43,72 @@ public class Connection implements Callable<Boolean> {
 
             if (!request.getIsCorrect()) {
                 badRequest(out);
-            }
+            } else {
 
-            if (!server.getHandlers().isEmpty()) {
-                var iterator = server.getHandlers().entrySet().iterator();
-                while (iterator.hasNext()) {
-                    Map.Entry<String, Map<String, Handler>> pair = iterator.next();
-                    if (request.getRequestMethod().equals(pair.getKey())) {
-                        var iterator1 = pair.getValue().entrySet().iterator();
-                        while (iterator1.hasNext()) {
-                            Map.Entry<String, Handler> map1 = iterator1.next();
-                            if (map1.getKey().equals(request.getPath())) {
-                                map1.getValue().handle(request, out);
-                                return false;
+                if (request.getIsQuery()) {
+                    request.getQueryParams().stream().forEach(System.out::println);
+                }
+
+                if (!server.getHandlers().isEmpty()) {
+                    var iterator = server.getHandlers().entrySet().iterator();
+                    while (iterator.hasNext()) {
+                        Map.Entry<String, Map<String, Handler>> pair = iterator.next();
+                        if (request.getRequestMethod().equals(pair.getKey())) {
+                            var iterator1 = pair.getValue().entrySet().iterator();
+                            while (iterator1.hasNext()) {
+                                Map.Entry<String, Handler> map1 = iterator1.next();
+                                if (map1.getKey().equals(request.getPath())) {
+                                    map1.getValue().handle(request, out);
+                                    return false;
+                                }
                             }
                         }
                     }
                 }
-            }
 
-            final var path = request.getPath();
-            if (path == null) {
-                badRequest(out);
-            } else {
-                if (!server.getValidPaths().contains(path)) {
+                final var path = request.getPath();
+                if (path == null) {
                     badRequest(out);
                     return false;
+                } else {
+                    if (!server.getValidPaths().contains(path)) {
+                        badRequest(out);
+                        return false;
+                    }
                 }
-            }
 
-            final var filePath = Path.of(".", "public", path);
-            final var mimeType = Files.probeContentType(filePath);
+                final var filePath = Path.of(".", "public", path);
+                final var mimeType = Files.probeContentType(filePath);
 
-            // special case for classic
-            if (path.equals("/classic.html")) {
-                final var template = Files.readString(filePath);
-                final var content = template.replace(
-                        "{time}",
-                        LocalDateTime.now().toString()
-                ).getBytes();
+                // special case for classic
+                if (path.equals("/classic.html")) {
+                    final var template = Files.readString(filePath);
+                    final var content = template.replace(
+                            "{time}",
+                            LocalDateTime.now().toString()
+                    ).getBytes();
+                    out.write((
+                            "HTTP/1.1 200 OK\r\n" +
+                                    "Content-Type: " + mimeType + "\r\n" +
+                                    "Content-Length: " + content.length + "\r\n" +
+                                    "Connection: close\r\n" +
+                                    "\r\n"
+                    ).getBytes());
+                    out.write(content);
+                    out.flush();
+                }
+
+                final var length = Files.size(filePath);
                 out.write((
                         "HTTP/1.1 200 OK\r\n" +
                                 "Content-Type: " + mimeType + "\r\n" +
-                                "Content-Length: " + content.length + "\r\n" +
+                                "Content-Length: " + length + "\r\n" +
                                 "Connection: close\r\n" +
                                 "\r\n"
                 ).getBytes());
-                out.write(content);
+                Files.copy(filePath, out);
                 out.flush();
-                return false;
             }
-
-            final var length = Files.size(filePath);
-            out.write((
-                    "HTTP/1.1 200 OK\r\n" +
-                            "Content-Type: " + mimeType + "\r\n" +
-                            "Content-Length: " + length + "\r\n" +
-                            "Connection: close\r\n" +
-                            "\r\n"
-            ).getBytes());
-            Files.copy(filePath, out);
-            out.flush();
             return false;
         }
     }

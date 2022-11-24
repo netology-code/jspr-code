@@ -1,7 +1,11 @@
 package ru.netology;
 
 import org.apache.hc.core5.http.NameValuePair;
+import org.apache.hc.core5.net.URLEncodedUtils;
 
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -31,9 +35,18 @@ public class Request {
     public void setIsQuery(boolean isQuery){this.isQuery = isQuery;}
     public void setRequestHeaders(List<NameValuePair> requestHeaders){this.requestHeaders = requestHeaders;}
 
-    protected List<NameValuePair> getQueryParams() { return queryParams; }
     protected List<NameValuePair> getHeaders() { return requestHeaders; }
     protected List<NameValuePair> getPostParams() { return postParams;}
+    protected boolean getIsQuery() { return isQuery; }
+
+    protected List<NameValuePair> getQueryParams() {
+        try {
+            queryParams = URLEncodedUtils.parse(new URI(queryLine), StandardCharsets.UTF_8);
+        } catch (URISyntaxException e) {
+            e.printStackTrace();
+        }
+        return queryParams;
+    }
 
     protected List<NameValuePair> getQueryParam(String paramName) {
         if (!queryParams.isEmpty()) {
