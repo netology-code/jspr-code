@@ -9,14 +9,22 @@ import java.net.Socket;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class Server {
     private final List<String> VALID_PATHS = List.of("/index.html", "/spring.svg", "/spring.png", "/resources.html", "/styles.css", "/app.js", "/links.html", "/forms.html", "/classic.html", "/events.html", "/events.js");
+    private final Map<String, Handler> map = new ConcurrentHashMap<>();
     public static final int PORT = 9999;
     private static final int THREADS_COUNT = 64;
+
+    public void addHandler(String method, String path, Handler handler){
+        map.put(method + ":" + path, handler);
+    }
 
     public void startServer() {
         final ExecutorService executorService = Executors.newFixedThreadPool(THREADS_COUNT);
@@ -49,27 +57,61 @@ public class Server {
         try (final BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
              final BufferedOutputStream out = new BufferedOutputStream(socket.getOutputStream())) {
 
-            final String[] parts = getRequestParts(in);
-            if (parts.length != 3) {
+
+            Request request = getRequest(in);
+            if (request == null) {
                 // just close socket
                 return;
             }
-
-            final String path = parts[1];
-            if (!VALID_PATHS.contains(path)) {
-                sendNotFoundResponse(out);
+            String requestPath = request.getPath();
+            Handler handler = map.get(request.getMethod() + ":" + requestPath);
+            if (handler == null){
+                if (!VALID_PATHS.contains(requestPath)) {
+                    sendNotFoundResponse(out);
+                } else {
+                    sendResponse(out, requestPath);
+                }
             } else {
-                sendResponse(out, path);
+                handler.handle(request, out);
             }
+
             out.flush();
         }
     }
 
-    private String[] getRequestParts(BufferedReader in) throws IOException {
-        // read only request line for simplicity
-        // must be in form GET /path HTTP/1.1
+    private Request getRequest(BufferedReader in) throws IOException {
         String requestLine = in.readLine();
-        return requestLine.split(" ");
+        List<String> parts = Arrays.asList(requestLine.split(" "));
+        if (parts.size() != 3) {
+            // just close socket
+            return null;
+        }
+
+        StringBuilder headersStringBuilder = new StringBuilder();
+        StringBuilder bodyStringBuilder = new StringBuilder();
+
+        boolean hasBody = false;
+
+        String inputLine = in.readLine();
+        while (inputLine.length() > 0) {
+            headersStringBuilder.append(inputLine);
+            if (inputLine.startsWith("Content-Length: ")) {
+                int index = inputLine.indexOf(':') + 1;
+                String len = inputLine.substring(index).trim();
+                hasBody = Integer.parseInt(len) > 0;
+            }
+            inputLine = in.readLine();
+        }
+
+        if (hasBody) {
+            inputLine = in.readLine();
+            while (inputLine != null && inputLine.length() > 0) {
+                bodyStringBuilder.append(inputLine);
+                inputLine = in.readLine();
+            }
+        }
+
+        return new Request(parts.get(0), parts.get(1), headersStringBuilder.toString(), bodyStringBuilder.toString());
     }
 
     private void sendNotFoundResponse(BufferedOutputStream out) throws IOException {
