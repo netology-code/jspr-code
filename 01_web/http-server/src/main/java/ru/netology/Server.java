@@ -1,14 +1,22 @@
 package ru.netology;
 
+import org.apache.http.NameValuePair;
+import org.apache.http.client.utils.URLEncodedUtils;
+
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -22,7 +30,7 @@ public class Server {
     public static final int PORT = 9999;
     private static final int THREADS_COUNT = 64;
 
-    public void addHandler(String method, String path, Handler handler){
+    public void addHandler(String method, String path, Handler handler) {
         map.put(method + ":" + path, handler);
     }
 
@@ -57,7 +65,6 @@ public class Server {
         try (final BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
              final BufferedOutputStream out = new BufferedOutputStream(socket.getOutputStream())) {
 
-
             Request request = getRequest(in);
             if (request == null) {
                 // just close socket
@@ -65,7 +72,8 @@ public class Server {
             }
             String requestPath = request.getPath();
             Handler handler = map.get(request.getMethod() + ":" + requestPath);
-            if (handler == null){
+
+            if (handler == null) {
                 if (!VALID_PATHS.contains(requestPath)) {
                     sendNotFoundResponse(out);
                 } else {
@@ -111,7 +119,30 @@ public class Server {
             }
         }
 
-        return new Request(parts.get(0), parts.get(1), headersStringBuilder.toString(), bodyStringBuilder.toString());
+        String fullPath = parts.get(1);
+        String path = fullPath;
+        List<NameValuePair> nameValuePairs = new ArrayList<>();
+        if (fullPath.contains("?")){
+            path = fullPath.split("\\?")[0];
+            nameValuePairs.addAll(parsQuery(fullPath));
+        }
+
+        return new Request(
+                parts.get(0),
+                path,
+                fullPath,
+                headersStringBuilder.toString(),
+                bodyStringBuilder.toString(),
+                nameValuePairs
+        );
+    }
+
+    private List<NameValuePair> parsQuery(String path){
+        try {
+            return URLEncodedUtils.parse(new URI(path), StandardCharsets.UTF_8);
+        } catch (URISyntaxException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private void sendNotFoundResponse(BufferedOutputStream out) throws IOException {
