@@ -1,7 +1,0 @@
-POST http://localhost:9999/api/posts
-Content-Type: application/json
-
-{
-  "id": 0,
-  "content": "Last Post"
-}
