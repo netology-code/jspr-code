@@ -1,16 +1,16 @@
 package ru.netology.servlet;
 
 import lombok.SneakyThrows;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import ru.netology.controller.PostController;
 import ru.netology.exception.NotFoundException;
-import ru.netology.repository.PostRepository;
-import ru.netology.service.PostService;
 
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 public class MainServlet extends HttpServlet {
+
     private PostController controller;
     private final static String METHOD_GET = "GET";
     private final static String METHOD_POST = "POST";
@@ -18,9 +18,8 @@ public class MainServlet extends HttpServlet {
 
     @Override
     public void init() {
-        PostRepository repository = new PostRepository();
-        PostService service = new PostService(repository);
-        controller = new PostController(service);
+        AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext("ru.netology");
+        controller = context.getBean(PostController.class);
     }
 
     @SneakyThrows
