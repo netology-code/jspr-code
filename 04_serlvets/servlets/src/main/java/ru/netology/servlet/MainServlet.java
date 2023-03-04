@@ -1,7 +1,8 @@
 package ru.netology.servlet;
 
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import ru.netology.config.JavaConfig;
 import ru.netology.controller.PostController;
-import ru.netology.repository.PostRepository;
 import ru.netology.service.PostService;
 
 import javax.servlet.http.HttpServlet;
@@ -10,15 +11,15 @@ import javax.servlet.http.HttpServletResponse;
 
 public class MainServlet extends HttpServlet {
     private PostController controller;
-    private final static String METHOD_GET = "GET";
-    private final static String METHOD_POST = "POST";
-    private final static String METHOD_DELETE = "DELETE";
 
     @Override
     public void init() {
-        final var repository = new PostRepository();
-        final var service = new PostService(repository);
-        controller = new PostController(service);
+        final var context = new AnnotationConfigApplicationContext(JavaConfig.class);
+        controller = context.getBean(PostController.class);
+
+        final var service = context.getBean(PostService.class);
+
+        final var isSame = service == context.getBean("postService");
     }
 
     @Override
@@ -26,24 +27,24 @@ public class MainServlet extends HttpServlet {
         try {
             final var path = req.getRequestURI();
             final var method = req.getMethod();
-
-            if (method.equals(METHOD_GET) && path.equals("/api/posts")) {
+            // primitive routing
+            if (method.equals("GET") && path.equals("/api/posts")) {
                 controller.all(resp);
                 return;
             }
-            if (method.equals(METHOD_GET) && path.matches("/api/posts/\\d+")) {
-
-                String id = Long.parseLong(path.substring(path.lastIndexOf("/")));
+            if (method.equals("GET") && path.matches("/api/posts/\\d+")) {
+                // easy way
+                final var id = Long.parseLong(path.substring(path.lastIndexOf("/")));
                 controller.getById(id, resp);
                 return;
             }
-            if (method.equals(METHOD_POST) && path.equals("/api/posts")) {
+            if (method.equals("POST") && path.equals("/api/posts")) {
                 controller.save(req.getReader(), resp);
                 return;
             }
-            if (method.equals(METHOD_DELETE) && path.matches("/api/posts/\\d+")) {
-
-                String id = Long.parseLong(path.substring(path.lastIndexOf("/")));
+            if (method.equals("DELETE") && path.matches("/api/posts/\\d+")) {
+                // easy way
+                final var id = Long.parseLong(path.substring(path.lastIndexOf("/")));
                 controller.removeById(id, resp);
                 return;
             }
