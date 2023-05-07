@@ -8,13 +8,11 @@ import java.nio.file.Path;
 public class Main {
   public static void main(String[] args) {
     final var server = new Server(64);
-
-
     server.addHandler("GET", "/index.html", new Handler() {
       @Override
       public void handle(Request request, BufferedOutputStream out) {
         try {
-          Path filePath = Path.of(":", "public", request.getPath());
+          Path filePath = Path.of(".", "01_web", "http-server", "public", request.getPath());
           String mimeType = Files.probeContentType(filePath);
           long sizeFile = Files.size(filePath);
           outResponse(mimeType, sizeFile, out, filePath);
@@ -27,7 +25,7 @@ public class Main {
       @Override
       public void handle(Request request, BufferedOutputStream out) {
         try {
-          Path filePath = Path.of(":", "public", request.getPath());
+          Path filePath = Path.of(".", "01_web", "http-server", "public", request.getPath());
           String mimeType = Files.probeContentType(filePath);
           long sizeFile = Files.size(filePath);
           outResponse(mimeType, sizeFile, out, filePath);
@@ -36,7 +34,7 @@ public class Main {
         }
       }
     });
-    server.startedServer(1111);
+    server.startedServer(9999);
   }
 
   public static void outResponse(String mimeType, long size, BufferedOutputStream bufferedOutputStream, Path path) throws IOException {

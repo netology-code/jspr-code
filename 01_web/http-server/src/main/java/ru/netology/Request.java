@@ -19,25 +19,25 @@ public class Request {
         this.path = path;
         this.headers = headers;
     }
-    public static Request parsingHttpRequest (InputStream inputStream){
-        try (BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream))) {
-            String[] requestStartedLine = bufferedReader.readLine().split(" ");
-            String methodHttp = requestStartedLine[0];
-            String pathHttp = requestStartedLine[1];
-            Map<String, String> headers = setHeaders(bufferedReader);
-            return new Request(methodHttp, inputStream, pathHttp, headers);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+
+    public static Request parsingHttpRequest(InputStream inputStream) throws IOException {
+        BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
+        String[] requestStartedLine = bufferedReader.readLine().split(" ");
+        String methodHttp = requestStartedLine[0];
+        String pathHttp = requestStartedLine[1];
+        Map<String, String> headers = setHeaders(bufferedReader);
+        return new Request(methodHttp, inputStream, pathHttp, headers);
+
     }
-    private static Map<String, String> setHeaders (BufferedReader bufferedReader) throws IOException {
-        Map<String, String> headers= new HashMap<>();
+
+    private static Map<String, String> setHeaders(BufferedReader bufferedReader) throws IOException {
+        Map<String, String> headers = new HashMap<>();
         String headersHttpLine;
-        while (!(headersHttpLine = bufferedReader.readLine()).equals("")){
+        while (!(headersHttpLine = bufferedReader.readLine()).equals("")) {
             int i = headersHttpLine.indexOf(":");
             String key = headersHttpLine.substring(0, i);
             String value = headersHttpLine.substring(i + 2);
-            headers.put(key,value);
+            headers.put(key, value);
         }
         return headers;
     }

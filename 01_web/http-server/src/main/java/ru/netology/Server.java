@@ -55,6 +55,7 @@ public class Server {
             Map<String, Handler> path = mapRequest.get(requestLine.getMethod());
             if (path == null) {
                 errorHttpRequest.handle(requestLine, bufferedOutputStream);
+                return;
             }
             Handler handler = path.get(requestLine.getPath());
             handler.handle(requestLine, bufferedOutputStream);
