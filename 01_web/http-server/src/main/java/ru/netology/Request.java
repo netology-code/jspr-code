@@ -117,7 +117,7 @@ public class Request {
                     continue outer;
                 }
             }
-            return 1;
+            return i;
         }
         return -1;
     }

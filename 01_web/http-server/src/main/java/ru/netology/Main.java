@@ -34,7 +34,7 @@ public class Main {
         }
       }
     });
-    server.startedServer(9999);
+    server.startedServer(9998);
   }
 
   public static void outResponse(String mimeType, long size, BufferedOutputStream bufferedOutputStream, Path path) throws IOException {

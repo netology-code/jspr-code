@@ -52,12 +52,16 @@ public class Server {
         try (InputStream inputStream = socket.getInputStream();
              BufferedOutputStream bufferedOutputStream = new BufferedOutputStream(socket.getOutputStream())) {
             Request requestLine = Request.parsingHttpRequest(inputStream);
-            Map<String, Handler> path = mapRequest.get(requestLine.getMethod());
+            Map<String, Handler> path = mapRequest.get(requestLine != null ? requestLine.getMethod() : null);
             if (path == null) {
                 errorHttpRequest.handle(requestLine, bufferedOutputStream);
                 return;
             }
-            Handler handler = path.get(requestLine.getPath());
+            Handler handler = path.get(requestLine != null ? requestLine.getPath() : null);
+            if (handler == null){
+                errorHttpRequest.handle(requestLine, bufferedOutputStream);
+                return;
+            }
             handler.handle(requestLine, bufferedOutputStream);
         } catch (IOException e) {
             throw new RuntimeException(e);
