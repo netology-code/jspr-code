@@ -8,30 +8,24 @@ import java.nio.file.Path;
 public class Main {
   public static void main(String[] args) {
     final var server = new Server(64);
-    server.addHandler("GET", "/index.html", new Handler() {
-      @Override
-      public void handle(Request request, BufferedOutputStream out) {
-        try {
-          Path filePath = Path.of(".", "01_web", "http-server", "public", request.getPath());
-          String mimeType = Files.probeContentType(filePath);
-          long sizeFile = Files.size(filePath);
-          outResponse(mimeType, sizeFile, out, filePath);
-        } catch (IOException e) {
-          e.printStackTrace();
-        }
+    server.addHandler("GET", "/index.html", (request, out) -> {
+      try {
+        Path filePath = Path.of(".", "01_web", "http-server", "public", request.path());
+        String mimeType = Files.probeContentType(filePath);
+        long sizeFile = Files.size(filePath);
+        outResponse(mimeType, sizeFile, out, filePath);
+      } catch (IOException e) {
+        e.printStackTrace();
       }
     });
-    server.addHandler("POST", "/messages", new Handler() {
-      @Override
-      public void handle(Request request, BufferedOutputStream out) {
-        try {
-          Path filePath = Path.of(".", "01_web", "http-server", "public", request.getPath());
-          String mimeType = Files.probeContentType(filePath);
-          long sizeFile = Files.size(filePath);
-          outResponse(mimeType, sizeFile, out, filePath);
-        } catch (IOException e) {
-          e.printStackTrace();
-        }
+    server.addHandler("POST", "/messages", (request, out) -> {
+      try {
+        Path filePath = Path.of(".", "01_web", "http-server", "public", request.path());
+        String mimeType = Files.probeContentType(filePath);
+        long sizeFile = Files.size(filePath);
+        outResponse(mimeType, sizeFile, out, filePath);
+      } catch (IOException e) {
+        e.printStackTrace();
       }
     });
     server.startedServer(9998);

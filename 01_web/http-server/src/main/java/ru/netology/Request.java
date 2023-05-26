@@ -7,25 +7,9 @@ import java.io.*;
 import java.nio.charset.Charset;
 import java.util.*;
 
-public class Request {
+public record Request(String method, InputStream body, String path, List<String> headers,
+                      Map<String, List<String>> post, Map<String, List<String>> query) {
     private final static int LIMIT = 4096;
-    private final String method;
-    private final InputStream body;
-    private final String path;
-    private final List<String> headers;
-    private final Map<String, List<String>> post;
-    private final Map<String, List<String>> query;
-
-
-    public Request(String method, InputStream body, String path, List<String> headers, Map<String, List<String>> post,
-                   Map<String, List<String>> query) {
-        this.method = method;
-        this.body = body;
-        this.path = path;
-        this.headers = headers;
-        this.post = post;
-        this.query = query;
-    }
 
     public static Request parsingHttpRequest(InputStream inputStream) throws IOException {
         BufferedInputStream bufferedInputStream = new BufferedInputStream(inputStream);
@@ -120,30 +104,5 @@ public class Request {
             return i;
         }
         return -1;
-    }
-
-
-    public String getMethod() {
-        return method;
-    }
-
-    public InputStream getBody() {
-        return body;
-    }
-
-    public String getPath() {
-        return path;
-    }
-
-    public List<String> getHeaders() {
-        return headers;
-    }
-
-    public Map<String, List<String>> getPost() {
-        return post;
-    }
-
-    public Map<String, List<String>> getQuery() {
-        return query;
     }
 }
