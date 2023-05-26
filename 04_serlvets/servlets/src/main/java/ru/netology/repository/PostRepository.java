@@ -20,7 +20,7 @@ public class PostRepository {
   }
 
   public Post save(Post post) {
-    if (post == null && post.getId()!=0){
+    if (post.getId()!=0){
       throw new NotFoundException();
     }
     if (post.getId() == 0){
