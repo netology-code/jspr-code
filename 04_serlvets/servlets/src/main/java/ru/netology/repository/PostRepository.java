@@ -21,8 +21,13 @@ public class PostRepository {
 
   public Post save(Post post) {
     if (post.getId()!=0){
-      throw new NotFoundException();
-    }
+      if (postMap.containsKey(post.getId())) {
+        postMap.remove(post.getId());
+        postMap.put(post.getId(), post);
+      } else {
+        throw new NotFoundException();
+      }
+      }
     if (post.getId() == 0){
       var id = idPost.incrementAndGet();
       post.setId(id);
