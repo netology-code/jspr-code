@@ -1,8 +1,7 @@
 package ru.netology.servlet;
 
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import ru.netology.controller.PostController;
-import ru.netology.repository.PostRepository;
-import ru.netology.service.PostService;
 
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -16,9 +15,8 @@ public class MainServlet extends HttpServlet {
 
   @Override
   public void init() {
-    PostRepository repository = new PostRepository();
-    PostService service = new PostService(repository);
-    controller = new PostController(service);
+    final var context = new AnnotationConfigApplicationContext("ru.netology");
+    controller = context.getBean(PostController.class);
   }
 
   @Override
@@ -30,9 +28,9 @@ public class MainServlet extends HttpServlet {
         controller.all(resp);
         return;
       }
-      long l = Long.parseLong(path.substring(path.lastIndexOf(STR)));
+      long id = Long.parseLong(path.substring(path.lastIndexOf(STR)));
       if (method.equals("GET") && path.matches(API_POSTS_D)) {
-        controller.getById(l, resp);
+        controller.getById(id, resp);
         return;
       }
       if (method.equals("POST") && path.equals(API_POSTS)) {
@@ -40,7 +38,7 @@ public class MainServlet extends HttpServlet {
         return;
       }
       if (method.equals("DELETE") && path.matches(API_POSTS_D)) {
-        controller.removeById(l, resp);
+        controller.removeById(id, resp);
         return;
       }
       resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
