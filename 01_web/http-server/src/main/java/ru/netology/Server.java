@@ -50,7 +50,15 @@ public class Server {
                 return;
             }
 
-            final var path = parts[1];
+            final var pathAndQuery = parts[1];
+            System.out.println();
+            var parsResultParams = Request.getQueryParams(pathAndQuery);
+            var path = Request.getQueryParam(pathAndQuery);
+            System.out.println("Метод запроса: " + parts[0]);
+            System.out.println("Ресурс: " + path);
+            System.out.println("Параметры запроса: " + parsResultParams);
+            System.out.println("Версия протокола: " + parts[2]);
+
             if (!validPaths.contains(path)) {
                 out.write((
                         "HTTP/1.1 404 Not Found\r\n" +
@@ -94,8 +102,7 @@ public class Server {
             ).getBytes());
             Files.copy(filePath, out);
             out.flush();
-        }
-        catch (IOException e) {
+        } catch (IOException e) {
             e.printStackTrace();
         }
     }
