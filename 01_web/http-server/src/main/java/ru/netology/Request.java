@@ -36,7 +36,7 @@ public record Request(String method, InputStream body, String path, List<String>
         String path;
         Map<String, List<String>> query;
         if (pathAndQuery.contains("?")) {
-            String[] urlPathAndQuery = pathAndQuery.split("/?");
+            String[] urlPathAndQuery = pathAndQuery.split("\\?");
             path = urlPathAndQuery[0];
             String pathQuery = urlPathAndQuery[1];
             query = getQueryParams(pathQuery);
