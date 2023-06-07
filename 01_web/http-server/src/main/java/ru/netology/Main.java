@@ -7,13 +7,8 @@ import java.nio.file.Path;
 import java.time.LocalDateTime;
 
 public class Main {
-    private static final int poolSize = 64;
-    private static final int port = 9999;
-
     public static void main(String[] args) {
-
-        Server server = new Server(poolSize);
-
+        Server server = new Server(64, 9999);
         server.addHandler("GET", "/classic.html", Main::processFile);
         server.addHandler("GET", "/events.html", Main::processFile);
         server.addHandler("GET", "/forms.html", Main::processFile);
@@ -25,14 +20,12 @@ public class Main {
         server.addHandler("GET", "/spring.svg", Main::processFile);
         server.addHandler("GET", "/styles.css", Main::processFile);
         server.addHandler("GET", "/app.js", Main::processFile);
-
-        server.start(port);
+        server.start(9999);
     }
 
     public static void processFile(Request request, BufferedOutputStream out) throws IOException {
         final var filePath = Path.of(".", "public", request.getPath());
         final var mimeType = Files.probeContentType(filePath);
-
         // special case for classic
         if (request.getPath().equals("/classic.html")) {
             final var template = Files.readString(filePath);
@@ -50,8 +43,6 @@ public class Main {
             out.write(content);
             out.flush();
         }
-
-
         final var length = Files.size(filePath);
         out.write((
                 "HTTP/1.1 200 OK\r\n" +

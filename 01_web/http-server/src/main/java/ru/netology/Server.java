@@ -12,14 +12,15 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-
 public class Server {
-
     Map<String, Map<String, Handler>> handlers = new ConcurrentHashMap<>();
+    private final ExecutorService executorService;
+    private final int poolSize;
+    private final int port;
 
-    ExecutorService executorService;
-
-    public Server(int poolSize) {
+    public Server(int poolSize, int port) {
+        this.poolSize = poolSize;
+        this.port = port;
         this.executorService = Executors.newFixedThreadPool(poolSize);
     }
 
@@ -43,42 +44,31 @@ public class Server {
             // must be in form GET /path HTTP/1.1
             final var requestLine = in.readLine();
             final var parts = requestLine.split(" ");
-
             if (parts.length != 3) {
                 // just close socket
                 return;
             }
-
             final var request = new Request(parts[0], parts[1]);
-
             if (!handlers.containsKey(request.getMethod())) {
                 notFoundMessage(out);
             }
-
             var methodHandlers = handlers.get(request.getMethod());
-
             if (!methodHandlers.containsKey(request.getPath())) {
                 notFoundMessage(out);
             }
-
             var handler = methodHandlers.get(request.getPath());
-
             if (handler == null) {
                 notFoundMessage(out);
             }
-
             var getQueryParams = request.getQueryParams();
             var path = request.getPath();
             var method = request.getMethod();
-
             System.out.println();
             System.out.println("Метод запроса: " + method);
             System.out.println("Ресурс: " + path);
             System.out.println("Параметры запроса: " + getQueryParams);
             System.out.println("Версия протокола: " + parts[2]);
-
             handler.handle(request, out);
-
         } catch (IOException ioException) {
             ioException.printStackTrace();
         } catch (URISyntaxException e) {
@@ -91,7 +81,6 @@ public class Server {
             handlers.put(method, new ConcurrentHashMap<>());
         }
         handlers.get(method).put(path, handler);
-
     }
 
     public void notFoundMessage(BufferedOutputStream out) throws IOException {
@@ -102,6 +91,5 @@ public class Server {
                         "\r\n"
         ).getBytes());
         out.flush();
-
     }
 }
