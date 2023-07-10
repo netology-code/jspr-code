@@ -5,16 +5,30 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.time.LocalDateTime;
-import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.function.ToDoubleBiFunction;
+
 
 public class Server {
 
-    ExecutorService exService;
-    private int val = 0;
+    private final ExecutorService exService;
+    private final Map<String, Map<String, Handler>> mapRequest = new ConcurrentHashMap<>();
+    private final Handler outNegativeResponse = ((request, out) -> {
+        try {
+            out.write((
+                    "HTTP/1.1 404 Not Found\r\n" +
+                            "Content-Length: 0\r\n" +
+                            "Connection: close\r\n" +
+                            "\r\n"
+            ).getBytes());
+            out.flush();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    });
+
 
     public Server(int sizeThread) {
         this.exService = Executors.newFixedThreadPool(sizeThread);
@@ -33,63 +47,38 @@ public class Server {
         }
     }
 
+    public void addHandler(String method, String path, Handler handler) {
+        if (mapRequest.get(method) == null) {
+            mapRequest.put(method, new ConcurrentHashMap<>());
+        }
+        mapRequest.get(method).put(path, handler);
+    }
+
     private void connection(Socket socket) {
 
-        final var validPaths = List.of("/index.html", "/spring.svg", "/spring.png", "/resources.html", "/styles.css", "/app.js", "/links.html", "/forms.html", "/classic.html", "/events.html", "/events.js");
-
-        try {
-            while (true) {
-                try (
-                        final var in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-                        final var out = new BufferedOutputStream(socket.getOutputStream());
-                ) {
-
-                    final var requestLine = in.readLine();
-                    final var parts = requestLine.split(" ");
-
-                    if (parts.length != 3) {
-                        // just close socket
-                        continue;
-                    }
-
-                    final var path = parts[1];
-
-
-                    if (!validPaths.contains(path)) {
-
-                        // First metod
-                        outNegativeResponse(out);
-                        continue;
-                    }
-
-                    final var filePath = Path.of(".", "public", path);
-                    final var mimeType = Files.probeContentType(filePath);
-
-                    // Second metod
-
-                    // special case for classic
-                    if (path.equals("/classic.html")) {
-                        final var template = Files.readString(filePath);
-                        final var content = template.replace(
-                                "{time}",
-                                LocalDateTime.now().toString()
-                        ).getBytes();
-                        // Second metod
-                        outResponse(mimeType, content.length, out, filePath);
-                        continue;
-                    }
-
-                    final var length = Files.size(filePath);
-                    // Second metod
-                    outResponse(mimeType, length, out, filePath);
+        while (true) {
+            try (InputStream inputStream = socket.getInputStream();
+                 BufferedOutputStream bufferedOutputStream = new BufferedOutputStream(socket.getOutputStream())) {
+                Request requestLine = Request.parsingHttpRequest(inputStream);
+                Map<String, Handler> path = mapRequest.get(requestLine != null ? requestLine.method() : null);
+                if (path == null) {
+                    outNegativeResponse.handle(requestLine, bufferedOutputStream);
+                    return;
                 }
+                Handler handler = path.get(requestLine != null ? requestLine.path() : null);
+                if (handler == null) {
+                    outNegativeResponse.handle(requestLine, bufferedOutputStream);
+                    return;
+                }
+
+                handler.handle(requestLine, bufferedOutputStream);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
             }
-        } catch (IOException e) {
-            e.printStackTrace();
         }
     }
 
-    private void outResponse(String mimeType, long size, BufferedOutputStream bufferedOutputStream, Path path) throws IOException {
+    private static void outResponse(String mimeType, long size, BufferedOutputStream bufferedOutputStream, Path path) throws IOException {
         bufferedOutputStream.write((
                 "HTTP/1.1 200 OK\r\n" +
                         "Content-Type: " + mimeType + "\r\n" +
@@ -101,13 +90,5 @@ public class Server {
         bufferedOutputStream.flush();
     }
 
-    private void outNegativeResponse(BufferedOutputStream bufferedOutputStream) throws IOException {
-        bufferedOutputStream.write((
-                "HTTP/1.1 404 Not Found\r\n" +
-                        "Content-Length: 0\r\n" +
-                        "Connection: close\r\n" +
-                        "\r\n"
-        ).getBytes());
-        bufferedOutputStream.flush();
-    }
+
 }
