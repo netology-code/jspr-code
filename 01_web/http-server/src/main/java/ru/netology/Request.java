@@ -3,17 +3,23 @@ package ru.netology;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URLEncodedUtils;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 public class Request {
-  private final String queryString;
+  private final String path;
+  private final String method;
+  private final String version;
   private final Map<String, String> queryParams;
 
-  public Request(String queryString) {
-    this.queryString = queryString;
+  public Request(String method, String queryString, String version) throws URISyntaxException {
+    this.method = method;
+    this.path = new URI(queryString).getPath();
+    this.version = version;
     this.queryParams = parseQueryString(queryString);
   }
 
@@ -32,5 +38,17 @@ public class Request {
       paramMap.put(param.getName(), param.getValue());
     }
     return paramMap;
+  }
+
+  public String getMethod() {
+    return method;
+  }
+
+  public String getPath() {
+    return path;
+  }
+
+  public String getVersion() {
+    return version;
   }
 }

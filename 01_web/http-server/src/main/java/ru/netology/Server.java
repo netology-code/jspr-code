@@ -1,20 +1,9 @@
 package ru.netology;
 
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.utils.URIBuilder;
-import org.apache.http.impl.client.HttpClientBuilder;
-
-import org.apache.http.HttpResponse;
-import org.apache.http.client.HttpClient;
-
-
-import java.io.BufferedOutputStream;
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.net.ServerSocket;
 import java.net.Socket;
-
+import java.net.URISyntaxException;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
@@ -26,7 +15,6 @@ public class Server {
 
   public Server() {
     handlers.put("/messages", this::handleMessages);
-
   }
 
   public void start() {
@@ -53,10 +41,12 @@ public class Server {
         return;
       }
 
-      final String path = parts[1];
-      final String queryString = extractQueryString(path);
-      final String handlerPath = extractHandlerPath(path);
-      final Handler handler = handlers.get(handlerPath);
+      String httpMethod = parts[0];
+      String queryString = parts[1];
+      String httpVersion = parts[2];
+      Request request = new Request(httpMethod, queryString, httpVersion);
+
+      final Handler handler = handlers.get(request.getPath());
 
       if (handler == null) {
         out.write((
@@ -69,46 +59,24 @@ public class Server {
         return;
       }
 
-      final Request request = new Request(queryString);
-      final Response response = new Response(out);
-      handler.handle(request, response);
-    } catch (IOException e) {
+      handler.handle(request, new Response(out));
+    } catch (IOException | URISyntaxException e) {
       e.printStackTrace();
+      throw new RuntimeException(e);
     }
-  }
-
-  private String extractQueryString(String path) {
-    final int queryIndex = path.indexOf('?');
-    if (queryIndex == -1) {
-      return "";
-    }
-    return path.substring(queryIndex + 1);
-  }
-
-  private String extractHandlerPath(String path) {
-    final int queryIndex = path.indexOf('?');
-    if (queryIndex == -1) {
-      return path;
-    }
-    return path.substring(0, queryIndex);
   }
 
   private void handleMessages(Request request, Response response) throws IOException {
-    final String lastParam = request.getQueryParam("last");
-    final int last = (lastParam != null) ? Integer.parseInt(lastParam) : 0;
-
-    try {
-      final HttpClient httpClient = HttpClientBuilder.create().build();
-      final URIBuilder uriBuilder = new URIBuilder("https://example.com/messages");
-      uriBuilder.addParameter("last", Integer.toString(last));
-      final HttpGet httpGet = new HttpGet(uriBuilder.build());
-      final HttpResponse httpResponse = httpClient.execute(httpGet);
-
-      response.setStatus(httpResponse.getStatusLine().getStatusCode());
-      httpResponse.getEntity().writeTo(response.getOutputStream());
-    } catch (Exception e) {
-      response.setStatus(500);
-      response.println("Error: " + e.getMessage());
-    }
+    String recipient = request.getQueryParam("recipient");
+    String responseBody = "The letter to recipient" + recipient + " has been delivered";
+    OutputStream out = response.getOutputStream();
+    out.write((
+            "HTTP/1.1 200 OK\r\n"
+            + "Content-Type: text/html\r\n"
+            + "Content-Length: " + responseBody.length() + "\r\n"
+            + "\r\n"
+            + responseBody
+    ).getBytes());
+    out.flush();
   }
 }
