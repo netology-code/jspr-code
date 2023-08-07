@@ -3,29 +3,27 @@ package ru.netology.repository;
 import ru.netology.exception.NotFoundException;
 import ru.netology.model.Post;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class PostRepository {
-    private List<Post> posts = new ArrayList<>();
-    private int count;
+    private ConcurrentMap<Long, Post> storage = new ConcurrentHashMap<>();
+    private AtomicInteger count = new AtomicInteger();
 
-    public synchronized List<Post> all() {
-        return posts;
+    public Collection<Post> all() {
+        return storage.values();
     }
 
-    public synchronized Optional<Post> getById(long id) {
-        return posts.stream()
-                .filter(post -> post.getId() == id)
-                .findFirst();
+    public Optional<Post> getById(long id) {
+        return Optional.ofNullable(storage.get(id));
     }
 
-    public synchronized Post save(Post post) {
+    public Post save(Post post) {
         if (post.getId() == 0) {
-            Post newPost = new Post(count++, post.getContent());
-            posts.add(newPost);
+            Post newPost = new Post(count.incrementAndGet(), post.getContent());
+            storage.put(newPost.getId(), newPost);
             return newPost;
         } else {
             Optional<Post> foundedPost = getById(post.getId());
@@ -36,18 +34,11 @@ public class PostRepository {
                 throw new NotFoundException("Post with id " + post.getId() + " not found");
             }
         }
-
     }
 
-    public synchronized void removeById(long id) {
-        Iterator<Post> iterator = posts.iterator();
-        while (iterator.hasNext()) {
-            Post post = iterator.next();
-            if (post.getId() == id) {
-                iterator.remove();
-                return;
-            }
+    public void removeById(long id) {
+        if (storage.remove(id) == null) {
+            throw new NotFoundException("Post with id " + id + " not found");
         }
-        throw new NotFoundException("Post with id " + id + " not found");
     }
 }
