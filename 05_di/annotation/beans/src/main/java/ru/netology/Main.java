@@ -3,7 +3,7 @@ package ru.netology;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import ru.netology.service.PostService;
 
-public class Main {
+public class Main{
   public static void main(String[] args) {
     // отдаём список пакетов, в которых нужно искать аннотированные классы
     final var context = new AnnotationConfigApplicationContext("ru.netology");
