@@ -1,7 +1,6 @@
 package ru.netology.servlet;
 
 import ru.netology.controller.PostController;
-import ru.netology.repository.PostRepository;
 import ru.netology.repository.PostRepositoryImpl;
 import ru.netology.service.PostService;
 
@@ -10,6 +9,9 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 public class MainServlet extends HttpServlet {
+  private static final String POSTS_ENDPOINT = "/api/posts";
+  private static final String POSTS_WITH_ID_ENDPOINT = "/api/posts/";
+
   private PostController controller;
 
   @Override
@@ -21,31 +23,32 @@ public class MainServlet extends HttpServlet {
 
   @Override
   protected void service(HttpServletRequest req, HttpServletResponse resp) {
-    // если деплоились в root context, то достаточно этого
     try {
       final var path = req.getRequestURI();
       final var method = req.getMethod();
-      // primitive routing
-      if (method.equals("GET") && path.equals("/api/posts")) {
+
+      if (method.equals("GET") && path.equals(POSTS_ENDPOINT)) {
         controller.all(resp);
         return;
       }
-      if (method.equals("GET") && path.matches("/api/posts/\\d+")) {
-        // easy way
-        final var id = Long.parseLong(path.substring(path.lastIndexOf("/")));
+
+      if (method.equals("GET") && path.startsWith(POSTS_WITH_ID_ENDPOINT)) {
+        final var id = Long.parseLong(path.substring(POSTS_WITH_ID_ENDPOINT.length()));
         controller.getById(id, resp);
         return;
       }
-      if (method.equals("POST") && path.equals("/api/posts")) {
+
+      if (method.equals("POST") && path.equals(POSTS_ENDPOINT)) {
         controller.save(req.getReader(), resp);
         return;
       }
-      if (method.equals("DELETE") && path.matches("/api/posts/\\d+")) {
-        // easy way
-        final var id = Long.parseLong(path.substring(path.lastIndexOf("/")));
+
+      if (method.equals("DELETE") && path.startsWith(POSTS_WITH_ID_ENDPOINT)) {
+        final var id = Long.parseLong(path.substring(POSTS_WITH_ID_ENDPOINT.length()));
         controller.removeById(id, resp);
         return;
       }
+
       resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
     } catch (Exception e) {
       e.printStackTrace();

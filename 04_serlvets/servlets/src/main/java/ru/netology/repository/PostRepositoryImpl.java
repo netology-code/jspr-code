@@ -1,47 +1,40 @@
 package ru.netology.repository;
 
 import ru.netology.model.Post;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.Optional; // Импортируем класс Optional
 
 public class PostRepositoryImpl extends PostRepository {
-    private final List<Post> posts = new ArrayList<>();
+    private final ConcurrentHashMap<Long, Post> posts = new ConcurrentHashMap<>();
     private final AtomicLong nextId = new AtomicLong(1);
 
     @Override
-    public List<Post> all() {
-        return posts;
-    }
-
-    @Override
-    public Optional<Post> getById(long id) {
-        return posts.stream()
-                .filter(post -> post.getId() == id)
-                .findFirst();
-    }
-
-    @Override
-    public synchronized Post save(Post post) {
+    public Post save(Post post) {
         if (post.getId() == 0) {
             long postId = nextId.getAndIncrement();
             post.setId(postId);
-            posts.add(post);
+            posts.put(postId, post);
             return post;
         } else {
-            for (int i = 0; i < posts.size(); i++) {
-                if (posts.get(i).getId() == post.getId()) {
-                    posts.set(i, post);
-                    return post;
-                }
+            if (posts.replace(post.getId(), post) == null) {
+                throw new IllegalArgumentException("Post with id " + post.getId() + " not found");
             }
-            throw new IllegalArgumentException("Post with id " + post.getId() + " not found");
+            return post;
         }
     }
 
     @Override
-    public synchronized void removeById(long id) {
-        posts.removeIf(post -> post.getId() == id);
+    public void removeById(long id) {
+        if (posts.remove(id) == null) {
+            throw new IllegalArgumentException("Post with id " + id + " not found");
+        }
+    }
+
+    @Override
+    public Optional<Post> getById(long id) { // Изменяем возвращаемый тип на Optional<Post>
+        Post post = posts.get(id);
+        return Optional.ofNullable(post);
     }
 }
