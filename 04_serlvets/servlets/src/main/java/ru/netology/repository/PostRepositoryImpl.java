@@ -4,7 +4,7 @@ import ru.netology.model.Post;
 
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.Optional; // Импортируем класс Optional
+import java.util.Optional;
 
 public class PostRepositoryImpl extends PostRepository {
     private final ConcurrentHashMap<Long, Post> posts = new ConcurrentHashMap<>();
@@ -33,7 +33,7 @@ public class PostRepositoryImpl extends PostRepository {
     }
 
     @Override
-    public Optional<Post> getById(long id) { // Изменяем возвращаемый тип на Optional<Post>
+    public Optional<Post> getById(long id) {
         Post post = posts.get(id);
         return Optional.ofNullable(post);
     }
