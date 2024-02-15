@@ -5,10 +5,17 @@ import ru.netology.model.Post;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.Optional;
+import java.util.List;
+import java.util.ArrayList;
 
 public class PostRepositoryImpl extends PostRepository {
     private final ConcurrentHashMap<Long, Post> posts = new ConcurrentHashMap<>();
     private final AtomicLong nextId = new AtomicLong(1);
+
+    @Override
+    public List<Post> all() {
+        return new ArrayList<>(posts.values());
+    }
 
     @Override
     public Post save(Post post) {
